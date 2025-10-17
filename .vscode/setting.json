@@ -1,0 +1,15 @@
+{
+    "files.associations": {
+        "stdio.h": "c",
+        "stdbool.h": "c"
+    },
+    "C_Cpp.default.includePath": [
+        "${workspaceFolder}/rbtree_lab/src"
+    ]
+}
+
+
+
+
+
+
