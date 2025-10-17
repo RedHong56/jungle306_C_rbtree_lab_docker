@@ -4,21 +4,24 @@
 #include <stddef.h>
 
 typedef enum { RBTREE_RED, RBTREE_BLACK } color_t;
-
+////////// 키 값 : int /////////////////////
 typedef int key_t;
 
+/////////// 트리의 노드 구조체 선언/////////////
 typedef struct node_t {
-  color_t color;
-  key_t key;
-  struct node_t *parent, *left, *right;
+  color_t color; // 색
+  key_t key; // 카 겂
+  struct node_t *parent, *left, *right; // 부모노드, 자식노드
 } node_t;
 
-typedef struct {
-  node_t *root;
+//////////////////// Tree 구조체 선언/////////////////
+typedef struct { 
+  node_t *root; //루트 노드
   node_t *nil;  // for sentinel
 } rbtree;
 
-rbtree *new_rbtree(void);
+///////////////////
+rbtree *new_rbtree(void); 
 void delete_rbtree(rbtree *);
 
 node_t *rbtree_insert(rbtree *, const key_t);
