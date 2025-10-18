@@ -2,6 +2,7 @@
     "files.associations": {
         "assert.h": "c",
         "rbtree.h": "c",
-        "cstdlib": "c"
+        "cstdlib": "c",
+        "stdbool.h": "c"
     }
 }
