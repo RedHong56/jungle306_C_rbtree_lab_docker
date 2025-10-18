@@ -23,7 +23,7 @@ Balanced search tree로 많이 쓰이는 Red-black tree (이하 RB tree)를 C �
 
 - `tree_to_array(tree, array, n)`
   - RB tree의 내용을 *key 순서대로* 주어진 array로 변환
-  - array의 크기는 n으로 주어지며 tree의 크기가 n 보다 큰 경우에는 순서대로 n개 까지만 변환
+  - array의 크기는 n으로 주어지며 tree의 크기가 n 보다 큰 경우에는 ㅣ\ll순서대로 n개 까지만 변환
   - array의 메모리 공간은 이 함수를 부르는 쪽에서 준비하고 그 크기를 n으로 알려줍니다.
 
 ## 구현 규칙

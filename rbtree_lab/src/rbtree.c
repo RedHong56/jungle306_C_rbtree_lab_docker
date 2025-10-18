@@ -4,7 +4,7 @@
 
 rbtree *new_rbtree(void) {
   // NIL 노드 공간 확보후 초기화 과정
-  node_t *Nil = calloc(1, sizeof(node_t));
+  node_t *Nil= malloc(sizeof(node_t));
   Nil->color = RBTREE_BLACK;
   Nil->parent = Nil;
   Nil->left = Nil;
@@ -25,11 +25,11 @@ void delete_rbtree(rbtree *t)
   // 1. 트리 안에 있는 모든 노드들을 반환후
   while (cur != t->nil) // 널 포인터와 논리적의미가 다름
   {
-    if(cur->left != NULL) // 자식이 있는 경우(왼쪽 자식부터)
+    if(cur->left != t->nil) // 자식이 있는 경우(왼쪽 자식부터)
     {
       cur = cur->left;
     }
-    else if (cur->right != NULL) // 오른쪽 자식이 있으면
+    else if (cur->right != t->nil) // 오른쪽 자식이 있으면
     {
         cur = cur->right;
     }
@@ -51,20 +51,23 @@ free(t);
 ///////////////////////////// Left - Rotate 의사 코드 작성//////////////////////////
 void rotate_L(rbtree *T, node_t *x) // n = 부모
 {
+
+  if (x == NULL || x == T->nil || x->right == T->nil) return;
+
   node_t *y = x->right; // 자식 노드를 지정
   x->right = y->left;  // x의 오른쪽 자식을 y의 왼쪽 자식으로 설정
 
   // y의 왼쪽 자식 감별
-  if(y->left != T->nil) y->left->parent = x->parent;
+  if(y->left != T->nil) y->left->parent = x;
 
   y->parent = x->parent;// y 부모를 x의 부모로 설정
 
   // x 부모 판별에 따른 y 위치 이동
   if(x->parent == T->nil) T->root = y;
-  else if (x == x->parent->left) x->parent->left = y;
+  else if(x == x->parent->left) x->parent->left = y; // x 가 왼쪽이라면
   else x->parent->right = y;
 
-  // 최종 위치 이동술
+  // y를 부모로 올리는 과정
   y->left = x;
   x->parent = y;
   return;
@@ -72,15 +75,18 @@ void rotate_L(rbtree *T, node_t *x) // n = 부모
 ////////////////////////////// Right - Rotate 의사 코드 작성////////////////////////
 void rotate_R(rbtree *T, node_t *x)
 {
+
+  if (x == NULL || x == T->nil || x->left == T->nil) return;
+
   node_t *y = x->left;
   x->left = y->right;  
 
-  if(y->right != T->nil) y->right->parent = x->parent;
+  if(y->right != T->nil) y->right->parent = x;
 
   y->parent = x->parent;
 
   if(x->parent == T->nil) T->root = y;
-  else if (x == x->parent->right) x->parent->right = y;
+  else if(x == x->parent->right) x->parent->right = y;
   else x->parent->left = y;
 
   y->right = x;
@@ -90,7 +96,7 @@ void rotate_R(rbtree *T, node_t *x)
 /////////////////////////////////* INSERT-FIXUP */////////////////////////////////
 void insert_fixup(rbtree *t, node_t *cur) //부모노드
 {
-  node_t *uncle;
+  node_t *uncle = t->nil;
   while (cur->parent->color == RBTREE_RED) // 부모 색이 빨간색이 아니면 -> 4번 조건 통과
   {
     if(cur->parent == cur->parent->parent->left)// 부모가 왼쪽 자식인가?
@@ -100,10 +106,11 @@ void insert_fixup(rbtree *t, node_t *cur) //부모노드
       if (uncle->color == RBTREE_RED){ // 삼촌색 = RED
         cur->parent->color = RBTREE_BLACK; // 아부지-> black
         uncle->color = RBTREE_BLACK; // 삼촌색 -> black
-        cur->parent->parent = RBTREE_RED; // 할아부지 -> red
+        cur->parent->parent->color = RBTREE_RED; // 할아부지 -> red
         cur = cur->parent->parent; // cur = 할아부지로 업데이트
       }
-      else{//삼촌 = 깜
+      else
+      { //삼촌 = 깜
         // CASE 2: 삼촌 = 깜 , 꺾
         if (cur == cur->parent->right) // 꺾 : 아부지가 할부지 왼쪽에 있는데 나는 아부지 오른쪽
         {
@@ -111,13 +118,11 @@ void insert_fixup(rbtree *t, node_t *cur) //부모노드
           rotate_L(t, cur); // 아부지 기준 회전 하는데 Why 왼쪽?
         }
         // CASE 3: 삼촌 = 깜, 노꺾
-        else // 노꺾 : 아부지가 할부지 왼쪽 이면서 나도 아부지의 왼쪽
-        {
-          cur->color = RBTREE_BLACK;
-          cur->parent->parent = RBTREE_RED;
+        // 노꺾 : 아부지가 할부지 왼쪽 이면서 나도 아부지의 왼쪽
+          cur->parent->color = RBTREE_BLACK;
+          cur->parent->parent->color = RBTREE_RED;
           // cur = cur->parent->parent; -> 왜 할부지로 cur 업데이트 안함?: 자식에서 더 해결해야하기 때문
           rotate_R(t, cur->parent->parent); 
-        }
       }
     }
     else // 부모가 오른쪽 자식인가?
@@ -127,7 +132,7 @@ void insert_fixup(rbtree *t, node_t *cur) //부모노드
       if (uncle->color == RBTREE_RED){ // 삼촌색 = RED
         cur->parent->color = RBTREE_BLACK; // 아부지-> black
         uncle->color = RBTREE_BLACK; // 삼촌색 -> black
-        cur->parent->parent = RBTREE_RED; // 할아부지 -> red
+        cur->parent->parent->color = RBTREE_RED; // 할아부지 -> red
         cur = cur->parent->parent; // cur = 할아부지로 업데이트
       }
       else{//삼촌 = 깜
@@ -135,16 +140,15 @@ void insert_fixup(rbtree *t, node_t *cur) //부모노드
         if (cur == cur->parent->left) // 꺾 : 아부지가 할부지 왼쪽에 있는데 나는 아부지 오른쪽
         {
           cur = cur->parent;
-          rotate_L(t, cur); // 아부지 기준 회전 하는데 Why 왼쪽?
+          rotate_R(t, cur); // 아부지 기준 회전 하는데 Why 왼쪽?
         }
         // CASE 3: 삼촌 = 깜, 노꺾
-        else // 노꺾 : 아부지가 할부지 왼쪽 이면서 나도 아부지의 왼쪽
-        {
-          cur->color = RBTREE_BLACK;
-          cur->parent->parent = RBTREE_RED;
-          // cur = cur->parent->parent; -> 왜 할부지로 cur 업데이트 안함?: 자식에서 더 해결해야하기 때문
-          rotate_R(t, cur->parent->parent); 
-        }
+        // 노꺾 : 아부지가 할부지 왼쪽 이면서 나도 아부지의 왼쪽
+        
+        cur->parent->color = RBTREE_BLACK;
+        cur->parent->parent->color = RBTREE_RED;
+        // cur = cur->parent->parent; -> 왜 할부지로 cur 업데이트 안함?: 자식에서 더 해결해야하기 때문
+        rotate_L(t, cur->parent->parent); 
       }
     }
   }
@@ -156,28 +160,21 @@ node_t *rbtree_insert(rbtree *t, const key_t key)
 {
   // 1. BST 삽입과 같은 방식을 가지고 온다
   node_t *node = calloc(1, sizeof(node_t));
-
   node_t *cur= t->root, *p=t->nil;
 
-  while (cur != t->nil)
+  while(cur != t->nil)
   {
     p = cur;
     // 키 값 위치 찾기
     if (cur->key > key) cur = cur->left; 
     else cur = cur->right;
   }
-  
   node->parent = p;
-  if (p == t->nil){
-    t->root = node;
-  }
-  else if(p->key > key){
-    p->left= node;
-  }
-  else{
-    p->right= node; 
-  }
-  
+
+  if(p == t->nil) t->root = node;
+  else if(p->key > key) p->left= node;
+  else p->right= node; 
+
   node->color = RBTREE_RED;
   node->left = t->nil;
   node->right = t->nil;
@@ -187,6 +184,7 @@ node_t *rbtree_insert(rbtree *t, const key_t key)
 
   return t->root; // 반환값: root
 }
+
 ////////////////////////////////////* FIND *//////////////////////////////////////
 node_t *rbtree_find(const rbtree *t, const key_t key) {
   node_t *cur = t->root;
@@ -203,15 +201,23 @@ node_t *rbtree_find(const rbtree *t, const key_t key) {
 }
 ////////////////////////////////////* MIN *///////////////////////////////////////
 node_t *rbtree_min(const rbtree *t) {
-  node_t *cur = t->root;
-  while(cur = t->nil) cur = cur->right;
-  return cur->parent; // 찾고자하는 최대값
+  node_t *cur = t->root, *p = t->nil;
+  while(cur != t->nil) 
+  {
+    p = cur;
+    cur = cur->left;
+  }
+  return p; // 찾고자하는 최대값
 }
 ////////////////////////////////////* MAX *///////////////////////////////////////
 node_t *rbtree_max(const rbtree *t) {
-  node_t *cur = t->root;
-  while(cur = t->nil) cur = cur->left;
-  return cur->parent; // 찾고자하는 최대값
+  node_t *cur = t->root ,*p = t->nil;
+  while(cur != t->nil) 
+  {
+    p = cur;
+    cur = cur->right;
+  }
+  return p; // 찾고자하는 최대값
 }
 ////////////////////////////////////* ERASE-TRANSPLANT *//////////////////////////
 void rbtree_transplant(rbtree *t, node_t *u , node_t *v) // 역할:  u의 위치로 v (이식)
@@ -245,7 +251,7 @@ node_t *rbtree_successor(rbtree *t, node_t *node)
 void erase_fixup(rbtree *t, node_t *p)
 {
   node_t *brother = t->nil;
-  while(p->color = RBTREE_BLACK && p != t->root)
+  while(p != t->root && p->color == RBTREE_BLACK)
   {
     if (p == p->parent->left) // 지금 수정하려는 곳이 루트 기준 윈쪽이야?
     {
@@ -254,7 +260,7 @@ void erase_fixup(rbtree *t, node_t *p)
       if (brother->color == RBTREE_RED)
       {
         brother->color = RBTREE_BLACK;
-        p->parent = RBTREE_RED;
+        p->parent->color = RBTREE_RED;
         rotate_L(t, p->parent); // 조부모 기준 회전
         brother = p->parent->right;
       }
@@ -270,7 +276,7 @@ void erase_fixup(rbtree *t, node_t *p)
         if (brother->right->color == RBTREE_BLACK)
         {
           brother->left->color = RBTREE_BLACK;
-          brother = RBTREE_RED;
+          brother->color = RBTREE_RED;
           rotate_R(t, brother); // 형제 기준 회전
           brother = p->parent->left;
         }
@@ -288,7 +294,7 @@ void erase_fixup(rbtree *t, node_t *p)
       if (brother->color == RBTREE_RED)
       {
         brother->color = RBTREE_BLACK;
-        p->parent = RBTREE_RED;
+        p->parent->color = RBTREE_RED;
         rotate_R(t, p->parent); // 조부모 기준 회전
         brother = p->parent->left;
       }
@@ -304,7 +310,7 @@ void erase_fixup(rbtree *t, node_t *p)
         if (brother->left->color == RBTREE_BLACK)
         {
           brother->right->color = RBTREE_BLACK;
-          brother = RBTREE_RED;
+          brother->color = RBTREE_RED;
           rotate_L(t, brother); // 형제 기준 회전
           brother = p->parent->right;
         }
@@ -366,7 +372,21 @@ int rbtree_erase(rbtree *t, node_t *p)
   return 0;
 }
 /////////////////////////////* ARRAY *///////////////////////////////////////////
-int rbtree_to_array(const rbtree *t, key_t *arr, const size_t n) {
-  
+int rbtree_to_array(const rbtree *t, key_t *arr, const size_t n) 
+{ 
+  // 중위 순회 하면서 - 재귀, 스택형
+  node_t *cur = t->root;
+  int idx = 0;
+  array_recursion(t, arr, cur, &idx);
+  return 0;
+}
+
+void array_recursion(rbtree *t, key_t *arr, node_t *r, int *idx)
+{
+  if (r == t->nil) return 0;
+
+  array_recursion(t,arr, r->left, idx);
+  arr[(*idx)++] = r->key;
+  array_recursion(t,arr, r->right, idx);
   return 0;
 }
